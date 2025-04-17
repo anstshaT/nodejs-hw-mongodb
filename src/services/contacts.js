@@ -22,10 +22,7 @@ export const updateContact = async (contactId, payload, options = {}) => {
 
   if (!result || !result.value) return null;
 
-  return {
-    contact: result.value,
-    isNew: Boolean(result?.lastErrorObject?.upserted),
-  };
+  return result.value;
 };
 
 export const deleteContact = async (contactId) => {
