@@ -3,7 +3,7 @@ import cors from 'cors';
 import 'dotenv/config';
 
 import { getEnvVar } from './utils/getEnvVar.js';
-import router from './routers/contacts.js';
+import router from './routers/index.js';
 
 import { logger } from './middlewares/logger.js';
 import { notFoundHandler } from './middlewares/notFoundHandler.js';
@@ -15,7 +15,7 @@ export const setupServer = () => {
   app.use(express.json());
   app.use(logger);
 
-  app.use('/contacts', router);
+  app.use(router);
 
   /* 404 */
   app.use(notFoundHandler);
