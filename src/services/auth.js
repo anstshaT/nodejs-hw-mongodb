@@ -2,8 +2,7 @@ import createHttpError from 'http-errors';
 import UserCollection from '../db/models/User.js';
 import bcrypt from 'bcrypt';
 import SessionCollection from '../db/models/Session.js';
-import { randomBytes } from 'crypto';
-import { FIFTEEN_MINUTES, THIRTY_DAYS } from '../constans/index.js';
+import createSession from '../utils/createSession.js';
 
 /* REGISTER */
 
@@ -30,14 +29,40 @@ export const loginUser = async (payload) => {
 
   await SessionCollection.deleteOne({ userId: user._id });
 
-  const accessToken = randomBytes(30).toString('base64');
-  const refreshToken = randomBytes(30).toString('base64');
+  const session = createSession();
 
   return await SessionCollection.create({
     userId: user._id,
-    accessToken,
-    refreshToken,
-    accessTokenValidUntil: new Date(Date.now() + FIFTEEN_MINUTES),
-    refreshTokenValidUntil: new Date(Date.now() + THIRTY_DAYS),
+    ...session,
   });
+};
+
+/* REFRESH */
+
+export const refreshUserSession = async ({ sessionId, refreshToken }) => {
+  const session = await SessionCollection.findOne({
+    _id: sessionId,
+    refreshToken,
+  });
+  if (!session) throw createHttpError(401, 'Session not found');
+
+  const sessionTokenExpired =
+    new Date() > new Date(session.refreshTokenValidUntil);
+  if (sessionTokenExpired)
+    throw createHttpError(401, 'SessionToken is expired');
+
+  const newSession = createSession();
+
+  await SessionCollection.deleteOne({ _id: sessionId, refreshToken });
+
+  return await SessionCollection.create({
+    userId: session.userId,
+    ...newSession,
+  });
+};
+
+/* LOGOUT */
+
+export const logoutUser = async (sessionId) => {
+  await SessionCollection.deleteOne({ _id: sessionId });
 };
