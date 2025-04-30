@@ -3,6 +3,13 @@ import UserCollection from '../db/models/User.js';
 import bcrypt from 'bcrypt';
 import SessionCollection from '../db/models/Session.js';
 import createSession from '../utils/createSession.js';
+import jwt from 'jsonwebtoken';
+import { getEnvVar } from '../utils/getEnvVar.js';
+import { sendEmail } from '../utils/sendEmail.js';
+import handlebars from 'handlebars';
+import path from 'node:path';
+import fs from 'node:fs/promises';
+import { TEMPLATES_DIR } from '../constans/index.js';
 
 /* REGISTER */
 
@@ -65,4 +72,45 @@ export const refreshUserSession = async ({ sessionId, refreshToken }) => {
 
 export const logoutUser = async (sessionId) => {
   await SessionCollection.deleteOne({ _id: sessionId });
+};
+
+/* RESET PASSWORD BY EMAIL*/
+
+export const sendResetToken = async (email) => {
+  const user = await UserCollection.findOne({ email });
+  if (!user) throw createHttpError(404, 'User not found!');
+
+  const resetToken = jwt.sign(
+    { sub: user._id, email },
+    getEnvVar('JWT_SECRET'),
+    {
+      expiresIn: '5m',
+    },
+  );
+
+  const resetPasswordTemplatePath = path.join(
+    TEMPLATES_DIR,
+    'reset-password-email.html',
+  );
+
+  const templateSource = (
+    await fs.readFile(resetPasswordTemplatePath)
+  ).toString();
+
+  const appDomain = getEnvVar('APP_DOMAIN');
+
+  const template = handlebars.compile(templateSource);
+  const html = template({
+    name: user.name,
+    link: `${appDomain}/reset-password/?token=${resetToken}`,
+  });
+
+  const fromEmail = getEnvVar('SMTP_FROM');
+
+  await sendEmail({
+    from: fromEmail,
+    to: email,
+    subject: 'Reset your password',
+    html,
+  });
 };

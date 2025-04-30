@@ -3,8 +3,10 @@ import {
   logoutUser,
   refreshUserSession,
   registerUser,
+  sendResetToken,
 } from '../services/auth.js';
 import setupSession from '../utils/setupSession.js';
+import createHttpError from 'http-errors';
 
 /* REGISTER */
 
@@ -63,4 +65,22 @@ export const logoutUserController = async (req, res) => {
   res.clearCookie('refreshToken');
 
   res.status(204).send();
+};
+
+/* RESET PASSWORD BY EMAIL*/
+
+export const sendResetEmailController = async (req, res) => {
+  const email = await sendResetToken(req.body.email);
+  if (!email) {
+    throw createHttpError(
+      500,
+      '"Failed to send the email, please try again later."',
+    );
+  }
+
+  res.json({
+    status: 200,
+    message: 'Reset password email has been successfully sent.',
+    data: {},
+  });
 };
