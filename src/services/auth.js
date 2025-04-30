@@ -74,7 +74,7 @@ export const logoutUser = async (sessionId) => {
   await SessionCollection.deleteOne({ _id: sessionId });
 };
 
-/* RESET PASSWORD BY EMAIL*/
+/* SEND EMAIL*/
 
 export const sendResetToken = async (email) => {
   const user = await UserCollection.findOne({ email });
@@ -113,4 +113,33 @@ export const sendResetToken = async (email) => {
     subject: 'Reset your password',
     html,
   });
+};
+
+/* RESET PASSWORD */
+
+export const resetPassword = async ({ token, password }) => {
+  const jwtSecret = getEnvVar('JWT_SECRET');
+
+  let entries;
+  try {
+    entries = jwt.verify(token, jwtSecret);
+  } catch (e) {
+    if (e.name === 'TokenExpiredError' || e.name === 'JsonWebTokenError') {
+      throw createHttpError(401, 'Token is expired or invalid.');
+    }
+    throw e.message;
+  }
+
+  const user = await UserCollection.findOne({
+    email: entries.email,
+    _id: entries.sub,
+  });
+  if (!user) throw createHttpError(404, 'User not found!');
+
+  const encryptedPassword = await bcrypt.hash(password, 10);
+
+  await UserCollection.updateOne(
+    { _id: user.id },
+    { password: encryptedPassword },
+  );
 };
