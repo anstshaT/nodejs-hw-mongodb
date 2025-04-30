@@ -71,8 +71,9 @@ export const logoutUserController = async (req, res) => {
 /* SEND EMAIL*/
 
 export const sendResetEmailController = async (req, res) => {
-  const email = await sendResetToken(req.body.email);
-  if (!email) {
+  await sendResetToken(req.body.email);
+
+  if (!sendResetToken(req.body.email)) {
     throw createHttpError(
       500,
       '"Failed to send the email, please try again later."',
