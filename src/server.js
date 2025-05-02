@@ -10,6 +10,8 @@ import { logger } from './middlewares/logger.js';
 import { notFoundHandler } from './middlewares/notFoundHandler.js';
 import { errorHandler } from './middlewares/errorHandler.js';
 
+import { UPLOAD_DIR } from './constans/index.js';
+
 export const setupServer = () => {
   const app = express();
   app.use(cors());
@@ -24,6 +26,8 @@ export const setupServer = () => {
 
   /* 500 */
   app.use(errorHandler);
+
+  app.use('/uploads', express.static(UPLOAD_DIR));
 
   const port = Number(getEnvVar('PORT', 3000));
 
