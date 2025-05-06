@@ -21,15 +21,14 @@ export const setupServer = () => {
   app.use(cookieParser());
 
   app.use(router);
+  app.use('/uploads', express.static(UPLOAD_DIR));
+  app.use('/api-docs', swaggerDocs());
 
   /* 404 */
   app.use(notFoundHandler);
 
   /* 500 */
   app.use(errorHandler);
-
-  app.use('/uploads', express.static(UPLOAD_DIR));
-  app.use('/api-docs', swaggerDocs());
 
   const port = Number(getEnvVar('PORT', 3000));
 

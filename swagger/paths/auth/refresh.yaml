@@ -1,0 +1,45 @@
+tags:
+  - Auth
+summary: Refresh session by refreshToken
+operationId: refreshSession
+description: 'Refresf session by cookies refreshToken'
+security:
+  - bearerAuth: []
+parameters:
+  - in: cookie
+    name: refreshToken
+    schema:
+      type: string
+      example: nb97XuN7KYiylPuEcdXsG29G9iaekNOP5%2Feta3%2BL
+  - in: cookie
+    name: sessionId
+    schema:
+      type: string
+      example: j%3A%22681a10304b7d89856843a146%22
+responses:
+  '200':
+    description: Successfully refreshed a session
+    content:
+      application/json:
+        schema:
+          required:
+            - status
+            - message
+            - data
+          properties:
+            status:
+              type: integer
+              example: 200
+            message:
+              type: string
+              example: Successfully refreshed a session!
+            data:
+              type: object
+              required:
+                - accessToken
+              properties:
+                accessToken:
+                  type: string
+                  example: PnIvkETe3ogr7hSpeyKRZc5qVLW837r/hjNsVrW/
+  '401':
+    description: 'Session not found'
